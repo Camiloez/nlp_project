@@ -2,7 +2,7 @@ params = {
     'epochs': 50, # Épocas
     'emb_sz' :300, #tamaño embedding
     'k' : 4, #ancho kernel para CNN
-    'nh' : 600, #Neuronas ocultas 
+    'nh' : 600, #Neuronas ocultas
     'nl' : 4, # Número de capas
     'downbot' : 20, # in the bottleneck layers, how much to decrease channel depth
     'batch_size': 20, #Tamaño del batch para DataLoader (está restringido por el tamaño de la GPU)

@@ -21,7 +21,14 @@ El codigo del proyecto se encuentra funcionando en **codigo_proyecto/train_GCNN.
 
 - El código está casi todo sacado de https://towardsdatascience.com/how-to-build-a-gated-convolutional-neural-network-gcnn-for-natural-language-processing-nlp-5ba3ee730bfb
 - Vale la pena revisar ese github
-- En config.py están los parámetros, sino se pueden cambiar en el mismo jupyter al inicio, en
-params es el diccionario usado.
-- Es necesario bajar embeddings de glove https://www.kaggle.com/thanakomsn/glove6b300dtxt
+- En config.py están los parámetros, sino se pueden cambiar en el mismo jupyter al inicio, en params es el diccionario usado.
+- Es necesario bajar embeddings de  https://nlp.stanford.edu/projects/glove/, el archivo es **glove.6B.300d.txt**
 - Notar que se pueden usar otros embeddings, pero es importante que CALCE EL TAMAÑO, si por ejemplo usamos embeddings de tamaño 300 preentrenados (como glove), es importante que el mismo valor se asigne en los párametros a entrenar.
+
+## 4. Requerimientos
+```
+torch 1.3.0
+fastai 1.0.59
+pandas 0.25.3
+numpy 1.17.4
+```
