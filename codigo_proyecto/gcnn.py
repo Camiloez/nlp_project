@@ -1,14 +1,17 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch_xla
+import torch_xla.core.xla_model as xm
 
+device = xm.xla_device()
 
 class GCNNmodel(nn.Module):
     def __init__(self, vs, emb_sz, k, nh, nl,downbot):
         super().__init__()
-        
+
         self.embed = nn.Embedding(vs, emb_sz)
-        
+
         self.inlayer= GLUblock(k,emb_sz,nh,downbot)
         self.GLUlayers =self.make_GLU_layers(k,nh,nl,downbot)
         self.out=nn.AdaptiveLogSoftmaxWithLoss(nh, vs, cutoffs=[round(vs/25),round(vs/5)],div_value=4)
@@ -16,29 +19,29 @@ class GCNNmodel(nn.Module):
     def make_GLU_layers(self, k, nh, nl, downbot):
         layers = [GLUblock(k, nh, nh, downbot) for i in range(nl)]
         return nn.Sequential(*layers)
-        
+
     def forward(self, x):
-        
+
         target=x[1:,:]
         target=target.contiguous().view(target.size()[0]*target.size()[1])#[seq_length*bs,out_c]
         x=x[:-1,:]
-        
+
         #first block
         x = self.embed(torch.t(x)) # x -> [seq_length,bs] -> [bs,seq_length] -> [bs,seq_length,emb_sz] ... i.e. transpose 1st
-        x=torch.transpose(x, 1, 2) #[bs,emb_sz,seq_length]    
+        x=torch.transpose(x, 1, 2) #[bs,emb_sz,seq_length]
         x = x.unsqueeze(3)  # [bs,emb_sz,seq_length,1]
         x=self.inlayer(x) #[bs,nh,seq_length,1]
-             
+
         #residual GLU blocks
         x=self.GLUlayers(x) # [bs,nh,seq_length,1]
-        
+
         #out
         x=torch.squeeze(x,3) #[bs,out_c,seq_length]
         x=torch.transpose(x, 1, 2) #[bs,seq_length,out_c]
         x=torch.transpose(x, 0, 1) #[seq_length,bs,out_c]
         x=x.contiguous().view(-1,x.size()[2])#[seq_length*bs,out_c]
         outta=self.out(x,target)
-        
+
         return    outta
 
 
@@ -53,7 +56,7 @@ class GLUblock(nn.Module):
         else:
             self.use_proj=1
         self.convresid=nn.utils.weight_norm(nn.Conv2d(in_c, out_c, kernel_size=(1,1)),name='weight',dim=0)
-        
+
         self.leftpad = nn.ConstantPad2d((0,0,k-1,0),0)#(paddingLeft, paddingRight, paddingTop, paddingBottom)
 
         #[bs,in_c,seq_length+(k-1)]->conv(1,in_c,in_c/downbot)->[bs,in_c/downbot,seq_length+(k-1)]
